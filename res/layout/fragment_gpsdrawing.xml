@@ -1,134 +1,267 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
     xmlns:tools="http://schemas.android.com/tools"
+
     android:id="@+id/group_name"
+
     android:layout_width="match_parent"
+
     android:layout_height="match_parent"
+
     android:paddingBottom="@dimen/activity_vertical_margin"
+
     android:paddingLeft="@dimen/activity_horizontal_margin"
+
     android:paddingRight="@dimen/activity_horizontal_margin"
+
     android:paddingTop="@dimen/activity_vertical_margin"
+
     tools:context="edu.ics.uci.gpsdrawing.GPSDrawing$PlaceholderFragment" >
 
+
+
     <EditText
+
         android:id="@+id/group_name"
+
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content"
+
         android:layout_alignParentTop="true"
+
         android:layout_centerHorizontal="true"
+
         android:layout_marginTop="26dp"
+
         android:ems="10"
+
         android:hint="Group Name" >
 
+
+
         <requestFocus />
+
     </EditText>
 
+
+
     <EditText
+
         android:id="@+id/drawing_id"
+
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/editText1"
+
         android:layout_below="@+id/editText1"
+
         android:ems="10"
+
         android:hint="Drawing ID" />
 
+
+
     <CheckBox
+
         android:id="@+id/blue_box"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/green_box"
+
         android:layout_below="@+id/green_box"
+
         android:text="Add Blue" />
 
+
+
     <CheckBox
+
         android:id="@+id/green_box"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/red_box"
+
         android:layout_below="@+id/red_box"
+
         android:text="Add Green" />
 
+
+
     <ToggleButton
+
         android:id="@+id/pen_status"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignBaseline="@+id/green_box"
+
         android:layout_alignBottom="@+id/green_box"
+
         android:layout_alignRight="@+id/drawing_id"
+
         android:text="ToggleButton"
+
         android:textOff="UP"
+
         android:textOn="DOWN" />
 
+
+
     <TextView
+
         android:id="@+id/points_header"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_above="@+id/strokes_display"
+
         android:layout_alignRight="@+id/points_display"
+
         android:text="# of Points" />
 
+
+
     <Button
+
         android:id="@+id/upload_button"
+
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/strokes_display"
+
         android:layout_alignParentBottom="true"
+
         android:onClick="dynamicClick"
+
         android:text="Upload" />
 
+
+
     <TextView
+
         android:id="@+id/points_display"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignBaseline="@+id/strokes_display"
+
         android:layout_alignBottom="@+id/strokes_display"
+
         android:layout_alignRight="@+id/upload_button"
+
         android:text="0 Points"
+
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+
+
     <TextView
+
         android:id="@+id/strokes_display"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_above="@+id/upload_button"
+
         android:layout_alignLeft="@+id/strokes_header"
+
         android:layout_marginBottom="17dp"
+
         android:text="0 Strokes"
+
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+
+
     <TextView
+
         android:id="@+id/strokes_header"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignBaseline="@+id/points_header"
+
         android:layout_alignBottom="@+id/points_header"
+
         android:layout_alignLeft="@+id/location_display"
+
         android:text="# of Strokes" />
 
+
+
     <TextView
+
         android:id="@+id/location_display"
+
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/location_header"
+
         android:layout_below="@+id/location_header"
+
         android:text="Unavailable"
+
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+
+
     <CheckBox
+
         android:id="@+id/red_box"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/drawing_id"
+
         android:layout_below="@+id/drawing_id"
+
         android:layout_marginTop="36dp"
+
         android:text="Add Red" />
 
+
+
     <TextView
+
         android:id="@+id/location_header"
+
         android:layout_width="wrap_content"
+
         android:layout_height="wrap_content"
+
         android:layout_alignLeft="@+id/blue_box"
+
         android:layout_below="@+id/blue_box"
+
         android:layout_marginTop="19dp"
+
         android:text="Current Location" />
+
+
 
 </RelativeLayout>

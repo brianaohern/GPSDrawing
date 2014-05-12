@@ -20,50 +20,6 @@
 
 
 
-    <EditText
-
-        android:id="@+id/group_name"
-
-        android:layout_width="match_parent"
-
-        android:layout_height="wrap_content"
-
-        android:layout_alignParentTop="true"
-
-        android:layout_centerHorizontal="true"
-
-        android:layout_marginTop="26dp"
-
-        android:ems="10"
-
-        android:hint="Group Name" >
-
-
-
-        <requestFocus />
-
-    </EditText>
-
-
-
-    <EditText
-
-        android:id="@+id/drawing_id"
-
-        android:layout_width="match_parent"
-
-        android:layout_height="wrap_content"
-
-        android:layout_alignLeft="@+id/editText1"
-
-        android:layout_below="@+id/editText1"
-
-        android:ems="10"
-
-        android:hint="Drawing ID" />
-
-
-
     <CheckBox
 
         android:id="@+id/blue_box"
@@ -75,6 +31,8 @@
         android:layout_alignLeft="@+id/green_box"
 
         android:layout_below="@+id/green_box"
+        
+        android:onClick="add_blue"
 
         android:text="Add Blue" />
 
@@ -91,6 +49,8 @@
         android:layout_alignLeft="@+id/red_box"
 
         android:layout_below="@+id/red_box"
+        
+        android:onClick="add_green"
 
         android:text="Add Green" />
 
@@ -111,6 +71,8 @@
         android:layout_alignRight="@+id/drawing_id"
 
         android:text="ToggleButton"
+        
+        android:onClick="change_pen_status"
 
         android:textOff="UP"
 
@@ -146,7 +108,7 @@
 
         android:layout_alignParentBottom="true"
 
-        android:onClick="dynamicClick"
+        android:onClick="upload_data"
 
         android:text="Upload" />
 
@@ -223,6 +185,8 @@
         android:layout_below="@+id/location_header"
 
         android:text="Unavailable"
+        
+        android:onClick="upload_strokes"
 
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -241,6 +205,8 @@
         android:layout_below="@+id/drawing_id"
 
         android:layout_marginTop="36dp"
+        
+        android:onClick="add_red"
 
         android:text="Add Red" />
 
@@ -262,6 +228,24 @@
 
         android:text="Current Location" />
 
+    <EditText
+        android:id="@+id/group_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/drawing_id"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="Group Name"
+        android:inputType="text" />
 
+    <EditText
+        android:id="@+id/drawing_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/group_name"
+        android:layout_centerHorizontal="true"
+        android:ems="10"
+        android:hint="Drawing ID"
+        android:inputType="text" />
 
 </RelativeLayout>

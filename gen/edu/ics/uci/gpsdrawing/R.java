@@ -228,27 +228,26 @@ containing a value of this type.
         public static final int ic_plusone_tall_off_client=0x7f02001c;
     }
     public static final class id {
-        public static final int action_settings=0x7f050014;
-        public static final int blue_box=0x7f050009;
+        public static final int action_settings=0x7f050013;
+        public static final int blue_box=0x7f050007;
         public static final int container=0x7f050005;
-        public static final int drawing_id=0x7f050007;
-        public static final int editText1=0x7f050008;
-        public static final int green_box=0x7f05000a;
+        public static final int drawing_id=0x7f05000b;
+        public static final int green_box=0x7f050008;
         public static final int group_name=0x7f050006;
         public static final int hybrid=0x7f050004;
-        public static final int location_display=0x7f050012;
-        public static final int location_header=0x7f050013;
+        public static final int location_display=0x7f050011;
+        public static final int location_header=0x7f050012;
         public static final int none=0x7f050000;
         public static final int normal=0x7f050001;
-        public static final int pen_status=0x7f05000c;
-        public static final int points_display=0x7f05000f;
-        public static final int points_header=0x7f05000d;
-        public static final int red_box=0x7f05000b;
+        public static final int pen_status=0x7f05000a;
+        public static final int points_display=0x7f05000e;
+        public static final int points_header=0x7f05000c;
+        public static final int red_box=0x7f050009;
         public static final int satellite=0x7f050002;
-        public static final int strokes_display=0x7f05000e;
-        public static final int strokes_header=0x7f050011;
+        public static final int strokes_display=0x7f05000d;
+        public static final int strokes_header=0x7f050010;
         public static final int terrain=0x7f050003;
-        public static final int upload_button=0x7f050010;
+        public static final int upload_button=0x7f05000f;
     }
     public static final class integer {
         public static final int google_play_services_version=0x7f070000;

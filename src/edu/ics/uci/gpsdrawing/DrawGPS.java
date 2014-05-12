@@ -5,6 +5,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
 import edu.uci.ics.ics163.gpsdrawupload.Point;
@@ -13,11 +14,13 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.IntentSender;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-//import android.util.Log;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener {
+public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener {
 
 	public static StrokeManager stroke_manager;
 	private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -44,22 +47,17 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	public class Manager extends AsyncTask<StrokeManager, Void, Integer> {
 		
 		protected void onPreExecute() {
-			Location mCurrentLocation = mLocationClient.getLastLocation();
-			lastLocation  = "(" + mCurrentLocation.getLatitude() + " , " + mCurrentLocation.getLongitude() + ")";
 		}
 		
 		protected void onPostExecute(String result) {
-			updateUI();
 		}
 		
 		protected void onProgressUpdate(Void... values) {
 		}
-
+		
+		@Override
 		protected Integer doInBackground(StrokeManager... params) {
-			if (pen_status) {
-				Point current = new Point(mLocationClient.getLastLocation().getTime(), mLocationClient.getLastLocation().getLatitude(), mLocationClient.getLastLocation().getLongitude());
-				stroke_manager.addPoint(stroke_name, current);
-			}
+			onLocationChanged(mLocationClient.getLastLocation());
 			return null;
 		}
 	}
@@ -69,19 +67,20 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gpsdrawing);
 		
-		pen_status = false;
-		mLocationClient = new LocationClient(this, this, this);
-		loc_requester = new LocationRequest();
-		loc_requester.setFastestInterval(2);
-		loc_requester.setInterval(10);
-		mLocationClient.connect();
-		stroke_manager = new StrokeManager();
-		stroke_name = String.valueOf((int)(Math.random()));
-
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		pen_status = false;
+		stroke_name = String.valueOf((int)(Math.random()));
+		mLocationClient = new LocationClient(this, this, this);
+		loc_requester = new LocationRequest();
+		loc_requester.setPriority(loc_requester.PRIORITY_HIGH_ACCURACY);
+		loc_requester.setFastestInterval(1000);
+		loc_requester.setInterval(3000);
+		mLocationClient.connect();
+		stroke_manager = new StrokeManager();
 	}
 
 	@Override
@@ -128,6 +127,7 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 
 				public void upload_click(View v) {
 					stroke_manager.upload(String.valueOf(R.id.group_name), String.valueOf(R.id.drawing_id));
+					Log.i("upload status", "I'm uploading like a boss");
 				}
 			});
 			
@@ -191,7 +191,9 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	
 	public static void change_pen_status(View v) {
 		if (pen_status == false) {
+			stroke_name = String.valueOf((int)(Math.random()));
 			pen_status = true;
+			Log.i("pen status", "its true now");
 		} else {
 			pen_status = false;
 		}
@@ -228,12 +230,14 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	public void updateUI() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				TextView tv = (TextView) findViewById(R.id.location_display);
-				tv.setText(lastLocation);
-				TextView tv2 = (TextView) findViewById(R.id.strokes_display);
-				tv2.setText(stroke_manager.countStrokes());
-				TextView tv3 = (TextView) findViewById(R.id.points_display);
-				tv3.setText(stroke_manager.countPoints());
+				if ((loc_requester != null) || (mLocationClient != null)) {
+					TextView tv = (TextView) findViewById(R.id.location_display);
+					tv.setText(lastLocation);
+					TextView tv2 = (TextView) findViewById(R.id.strokes_display);
+					tv2.setText(String.valueOf(stroke_manager.countStrokes()));
+					TextView tv3 = (TextView) findViewById(R.id.points_display);
+					tv3.setText(String.valueOf(stroke_manager.countPoints()));
+				}
 			}
 		});
 		
@@ -263,8 +267,18 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 		}
 	}
 	
-	@Override
 	public void onDestroy() {
 		mLocationClient.disconnect();
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		Log.i("location change", "Changing locale");
+		Location mCurrentLocation = location;
+		lastLocation  = "(" + mCurrentLocation.getLatitude() + " , " + mCurrentLocation.getLongitude() + ")";
+		if (pen_status) {
+			Point current = new Point(mLocationClient.getLastLocation().getTime(), mLocationClient.getLastLocation().getLatitude(), mLocationClient.getLastLocation().getLongitude());
+			stroke_manager.addPoint(stroke_name, current);
+		}
 	}
 }

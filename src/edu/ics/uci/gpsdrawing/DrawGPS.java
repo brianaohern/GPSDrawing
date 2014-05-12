@@ -33,34 +33,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener {
+public class DrawGPS extends Activity {
 
+//	implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener 
 	public static StrokeManager stroke_manager;
-	private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-	public static String lastLocation = "Unavailable";
 	public static int color_r, color_g, color_b = 0;
-	private LocationClient mLocationClient;
-	private LocationRequest loc_requester;
 	public static boolean pen_status;
 	public static String stroke_name;
-	
-	public class Manager extends AsyncTask<StrokeManager, Void, Integer> {
-		
-		protected void onPreExecute() {
-		}
-		
-		protected void onPostExecute(String result) {
-		}
-		
-		protected void onProgressUpdate(Void... values) {
-		}
-		
-		@Override
-		protected Integer doInBackground(StrokeManager... params) {
-			onLocationChanged(mLocationClient.getLastLocation());
-			return null;
-		}
-	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,17 +49,11 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
+			pen_status = false;
+			stroke_name = String.valueOf((int)(Math.random()));
+			stroke_manager = new StrokeManager();
 		}
-		
-		pen_status = false;
-		stroke_name = String.valueOf((int)(Math.random()));
-		mLocationClient = new LocationClient(this, this, this);
-		loc_requester = new LocationRequest();
-		loc_requester.setPriority(loc_requester.PRIORITY_HIGH_ACCURACY);
-		loc_requester.setFastestInterval(1000);
-		loc_requester.setInterval(3000);
-		mLocationClient.connect();
-		stroke_manager = new StrokeManager();
+		Activity parent = this.getParent();
 	}
 
 	@Override
@@ -108,6 +81,8 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	 * A placeholder fragment containing a simple view.
 	 */
 	public static class PlaceholderFragment extends Fragment {
+		
+		public static TextView location_view, stroke_view, point_view;
 
 		public PlaceholderFragment() {
 		}
@@ -117,14 +92,17 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_gpsdrawing,
 					container, false);
-			lastLocation = "Unavailable";
+			
+			location_view = (TextView) rootView.findViewById(R.id.location_display);
+			stroke_view = (TextView) rootView.findViewById(R.id.strokes_display);
+			point_view = (TextView) rootView.findViewById(R.id.points_display);
 			
 			Button updateButton = (Button) rootView.findViewById(R.id.upload_button);
 			updateButton.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
 					upload_click(v);
 				}
-
+				
 				public void upload_click(View v) {
 					stroke_manager.upload(String.valueOf(R.id.group_name), String.valueOf(R.id.drawing_id));
 					Log.i("upload status", "I'm uploading like a boss");
@@ -136,12 +114,30 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 				public void onClick(View v) {
 					add_red(v);
 				}
+				
+				public void add_red(View v) {
+					if (color_r == 0) {
+						color_r = 255;
+					} else {
+						color_r = 0;
+					}
+					stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
+				}
 			});
 			
 			CheckBox greenCheckbox = (CheckBox) rootView.findViewById(R.id.green_box);
 			greenCheckbox.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
 					add_green(v);
+				}
+				
+				public void add_green(View v) {
+					if (color_g == 0) {
+						color_g = 255;
+					} else {
+						color_g = 0;
+					}
+					stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
 				}
 			});
 			
@@ -150,6 +146,15 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 				public void onClick(View v) {
 					add_blue(v);
 				}
+				
+				public void add_blue(View v) {
+					if (color_b == 0) {
+						color_b = 255;
+					} else {
+						color_b = 0;
+					}
+					stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
+				}
 			});
 			
 			ToggleButton change_pen_status = (ToggleButton) rootView.findViewById(R.id.pen_status);
@@ -157,96 +162,27 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 				public void onClick(View v) {
 					change_pen_status(v);
 				}
+				
+				public void change_pen_status(View v) {
+
+					if (pen_status == false) {
+						stroke_name = String.valueOf((int)(Math.random()));
+						pen_status = true;
+					} else {
+						pen_status = false;
+					}
+				}
 			});
 			return rootView;
 		}
 	}
-	
-	public static void add_red(View v) {
-		if (color_r == 0) {
-			color_r = 255;
-		} else {
-			color_r = 0;
-		}
-		stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
-	}
-	
-	public static void add_green(View v) {
-		if (color_g == 0) {
-			color_g = 255;
-		} else {
-			color_g = 0;
-		}
-		stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
-	}
-	
-	public static void add_blue(View v) {
-		if (color_b == 0) {
-			color_b = 255;
-		} else {
-			color_b = 0;
-		}
-		stroke_manager.setStrokeColor(stroke_name, color_r, color_g, color_b);
-	}
-	
-	public static void change_pen_status(View v) {
-		if (pen_status == false) {
-			stroke_name = String.valueOf((int)(Math.random()));
-			pen_status = true;
-			Log.i("pen status", "its true now");
-		} else {
-			pen_status = false;
-		}
-	}
 
-
-	@Override
-	public void onConnectionFailed(ConnectionResult result) {
-		if (result.hasResolution()) {
-			try {
-				result.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-			} catch (IntentSender.SendIntentException e) {
-				e.printStackTrace();
-			}
-		} else {
-			Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(), this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-			if (errorDialog != null) {
-				ErrorDialogFragment errorFragment = new ErrorDialogFragment();
-				errorFragment.setDialog(errorDialog);
-				errorFragment.show(getFragmentManager(), "Location Updates");
-			}
-		}
-	}
-
-	@Override
-	public void onConnected(Bundle connectionHint) {
-		Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-		
-		Location mCurrentLocation = mLocationClient.getLastLocation();
-		lastLocation  = "(" + mCurrentLocation.getLatitude() + " , " + mCurrentLocation.getLongitude() + ")";
-		updateUI();
-	}
-
-	public void updateUI() {
+	public void updateUI(final Activity parent) {
 		runOnUiThread(new Runnable() {
+			@Override
 			public void run() {
-				if ((loc_requester != null) || (mLocationClient != null)) {
-					TextView tv = (TextView) findViewById(R.id.location_display);
-					tv.setText(lastLocation);
-					TextView tv2 = (TextView) findViewById(R.id.strokes_display);
-					tv2.setText(String.valueOf(stroke_manager.countStrokes()));
-					TextView tv3 = (TextView) findViewById(R.id.points_display);
-					tv3.setText(String.valueOf(stroke_manager.countPoints()));
-				}
 			}
-		});
-		
-	}
-
-	@Override
-	public void onDisconnected() {
-		// TODO Auto-generated method stub
-		
+		});	
 	}
 	
 	public static class ErrorDialogFragment extends DialogFragment {
@@ -267,18 +203,22 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 		}
 	}
 	
-	public void onDestroy() {
-		mLocationClient.disconnect();
-	}
+	public class mLocationManager extends AsyncTask<Activity, Integer, Integer> {
 
-	@Override
-	public void onLocationChanged(Location location) {
-		Log.i("location change", "Changing locale");
-		Location mCurrentLocation = location;
-		lastLocation  = "(" + mCurrentLocation.getLatitude() + " , " + mCurrentLocation.getLongitude() + ")";
-		if (pen_status) {
-			Point current = new Point(mLocationClient.getLastLocation().getTime(), mLocationClient.getLastLocation().getLatitude(), mLocationClient.getLastLocation().getLongitude());
-			stroke_manager.addPoint(stroke_name, current);
+		@Override
+		protected Integer doInBackground(Activity... params) {
+			// TODO Auto-generated method stub
+			return null;
 		}
+		
+		protected void onProgressUpdate() {
+			
+		}
+		
+	}
+	
+	@Override
+	public void onDestroy() {
+		stroke_manager.upload(String.valueOf(R.id.group_name), String.valueOf(R.id.drawing_id));
 	}
 }

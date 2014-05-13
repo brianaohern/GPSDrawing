@@ -14,7 +14,9 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
 import android.location.LocationManager;
@@ -33,7 +35,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener {
+public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, 
+GooglePlayServicesClient.OnConnectionFailedListener, 
+LocationListener {
 
 //	implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener 
 	public static StrokeManager stroke_manager;
@@ -41,6 +45,11 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	public static boolean pen_status;
 	public static String stroke_name;
 	private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+	public static boolean mLocationClientConnected = false;
+	public String lastLocation;
+	public static LocationClient mLocationClient;
+	public static LocationRequest mLocationRequest;
+	public static Activity parent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +62,15 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 			pen_status = false;
 			stroke_name = String.valueOf((int)(Math.random()));
 			stroke_manager = new StrokeManager();
+			mLocationClient = new LocationClient(this, this, this);
+			mLocationRequest = LocationRequest.create();
+			mLocationRequest.setFastestInterval(2000);
+			mLocationRequest.setInterval(5000);
+			mLocationRequest.setPriority(102);
+			mLocationClient.connect();
+			
 		}
-		Activity parent = this.getParent();
+		parent = this.getParent();
 	}
 
 	@Override
@@ -169,6 +185,12 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 					if (pen_status == false) {
 						stroke_name = String.valueOf((int)(Math.random()));
 						pen_status = true;
+						Log.i("pen status", "Pen down");
+						if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
+							PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent("android.intent.action.LOCALE_CHANGED"), PendingIntent.FLAG_UPDATE_CURRENT);
+							mLocationClient.requestLocationUpdates(mLocationRequest, pendingIntent);
+							Log.i("requesting", "updating");
+						}
 					} else {
 						pen_status = false;
 					}
@@ -178,10 +200,15 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 		}
 	}
 
-	public void updateUI(final Activity parent) {
+	public void updateUI() {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				Log.i("UI", "in update");
+				if((PlaceholderFragment.location_view != null) && (lastLocation != null)) {
+					PlaceholderFragment.location_view.setText(lastLocation);
+					Log.i("UI", "updated UI");
+				}
 			}
 		});	
 	}
@@ -208,35 +235,29 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 	}
 	
 	public class mLocationManager extends AsyncTask<Activity, Integer, Integer> {
-
+		
 		@Override
 		protected Integer doInBackground(Activity... params) {
-			// TODO Auto-generated method stub
 			return null;
 		}
-		
-		protected void onProgressUpdate() {
-			
-		}
-		
 	}
 	//@Override
 	public void onConnected(Bundle connectionHint)
 	{
 		//Display the connection status
 		Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-		location mCurrentLocation = mLocationClient.getLastLocation();
-		lastLocation = "("+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude()+")";
+		mLocationClientConnected = true;
 	}
 	
 	@Override
 	public void onDestroy() {
+		super.onDestroy();
 		stroke_manager.upload(String.valueOf(R.id.group_name), String.valueOf(R.id.drawing_id));
 	}
 
 	@Override
 	public void onConnectionFailed(ConnectionResult result) {
-		// TODO Auto-generated method stub
+
 		if(result.hasResolution())
 		{
 			try {
@@ -264,8 +285,20 @@ public class DrawGPS extends Activity implements GooglePlayServicesClient.Connec
 
 	@Override
 	public void onDisconnected() {
-		// TODO Auto-generated method stub
-		
+		Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		String display = "("+location.getLatitude()+","+location.getLongitude()+")";
+		this.lastLocation = display;
+		updateUI();
+		Log.i("location", "in on location changed");
+		if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
+			Point current = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
+			stroke_manager.addPoint(stroke_name, current);
+			Log.i("adding", "points added");
+		}
 	}
 	
 	

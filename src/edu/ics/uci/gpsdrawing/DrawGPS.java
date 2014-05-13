@@ -33,13 +33,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-public class DrawGPS extends Activity {
+public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener {
 
 //	implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener 
 	public static StrokeManager stroke_manager;
 	public static int color_r, color_g, color_b = 0;
 	public static boolean pen_status;
 	public static String stroke_name;
+	private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -186,17 +187,20 @@ public class DrawGPS extends Activity {
 	}
 	
 	public static class ErrorDialogFragment extends DialogFragment {
+		//Global field to contain the error dialog
 		private Dialog mDialog;
-		
+		//default constructor.  sets the dialog field to null
 		public ErrorDialogFragment() {
 			super();
 			mDialog = null;
 		}
 		
+		//set the dialog to display
 		public void setDialog(Dialog dialog) {
 			mDialog = dialog;
 		}
 		
+		//return a dialog to the dialogFragment
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			return mDialog;
@@ -216,9 +220,53 @@ public class DrawGPS extends Activity {
 		}
 		
 	}
+	//@Override
+	public void onConnected(Bundle connectionHint)
+	{
+		//Display the connection status
+		Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+		location mCurrentLocation = mLocationClient.getLastLocation();
+		lastLocation = "("+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude()+")";
+	}
 	
 	@Override
 	public void onDestroy() {
 		stroke_manager.upload(String.valueOf(R.id.group_name), String.valueOf(R.id.drawing_id));
 	}
+
+	@Override
+	public void onConnectionFailed(ConnectionResult result) {
+		// TODO Auto-generated method stub
+		if(result.hasResolution())
+		{
+			try {
+				//start an activity that tries to resolve the error
+				result.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+			} catch(IntentSender.SendIntentException e) {
+				//log the error
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog
+					(result.getErrorCode(), this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+			if(errorDialog != null) {
+				//create a new dialogFragment for the error dialog
+				ErrorDialogFragment errorFragment = new ErrorDialogFragment();
+				//set the dialog in the dialogFragment
+				errorFragment.setDialog(errorDialog);
+				//show the error dialog in the dialogFragment
+				errorFragment.show(getFragmentManager(), "Location Updates");
+			}
+		}
+	}
+
+	@Override
+	public void onDisconnected() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
 }

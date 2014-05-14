@@ -325,7 +325,7 @@ public final class R {
 		public static final int action_menu_divider = 0x7f060019;
 		public static final int action_menu_presenter = 0x7f06001a;
 		public static final int action_mode_close_button = 0x7f060027;
-		public static final int action_settings = 0x7f06004d;
+		public static final int action_settings = 0x7f06004f;
 		public static final int activity_chooser_view_content = 0x7f060028;
 		public static final int always = 0x7f06000f;
 		public static final int beginning = 0x7f060014;

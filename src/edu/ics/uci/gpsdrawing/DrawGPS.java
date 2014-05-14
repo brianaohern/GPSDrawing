@@ -40,7 +40,7 @@ import android.widget.ToggleButton;
 
 public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, 
 GooglePlayServicesClient.OnConnectionFailedListener, 
-LocationListener {
+LocationListener, android.location.LocationListener {
 
 //	implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationListener 
 	public static StrokeManager stroke_manager;
@@ -53,16 +53,22 @@ LocationListener {
 	public static LocationClient mLocationClient;
 	public static LocationRequest mLocationRequest;
 	public static Activity parent;
-	
-	private TextView latitudeField;
-	private TextView longitudeField;
+	//new variables
+	private static TextView latitudeField;
+	private static TextView longitudeField;
 	private LocationManager locationManager;
 	private String provider;
+	public static TextView stroke_view, point_view;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gpsdrawing);
+
+		latitudeField = (TextView) this.findViewById(R.id.lat_display);
+		longitudeField = (TextView) this.findViewById(R.id.lng_display);
+		stroke_view = (TextView) this.findViewById(R.id.strokes_display);
+		point_view = (TextView) this.findViewById(R.id.points_display);
 		
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Criteria criteria = new Criteria();
@@ -76,8 +82,8 @@ LocationListener {
 		}
 		else
 		{
-			latitudeField.setText("Location not available");
-			longitudeField.setText("Location not available");
+			//latitudeField.setText("Location not available");
+			//longitudeField.setText("Location not available");
 		}
 		
 		if (savedInstanceState == null) {
@@ -123,8 +129,6 @@ LocationListener {
 	 */
 	public static class PlaceholderFragment extends Fragment {
 		
-		public static TextView location_view, stroke_view, point_view;
-
 		public PlaceholderFragment() {
 		}
 
@@ -133,10 +137,6 @@ LocationListener {
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_gpsdrawing,
 					container, false);
-			
-			location_view = (TextView) rootView.findViewById(R.id.location_display);
-			stroke_view = (TextView) rootView.findViewById(R.id.strokes_display);
-			point_view = (TextView) rootView.findViewById(R.id.points_display);
 			
 			Button updateButton = (Button) rootView.findViewById(R.id.upload_button);
 			updateButton.setOnClickListener(new OnClickListener() {
@@ -210,11 +210,11 @@ LocationListener {
 						stroke_name = String.valueOf((int)(Math.random()));
 						pen_status = true;
 						Log.i("pen status", "Pen down");
-						if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
-							PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent("android.intent.action.LOCALE_CHANGED"), PendingIntent.FLAG_UPDATE_CURRENT);
-							mLocationClient.requestLocationUpdates(mLocationRequest, pendingIntent);
-							Log.i("requesting", "updating");
-						}
+						//if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
+						//	PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent("android.intent.action.LOCALE_CHANGED"), PendingIntent.FLAG_UPDATE_CURRENT);
+						//	mLocationClient.requestLocationUpdates(mLocationRequest, pendingIntent);
+						//	Log.i("requesting", "updating");
+						//}
 					} else {
 						pen_status = false;
 					}
@@ -224,13 +224,15 @@ LocationListener {
 		}
 	}
 
-	public void updateUI() {
+	public void updateUI(final Location location) {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				Log.i("UI", "in update");
-				if((PlaceholderFragment.location_view != null) && (lastLocation != null)) {
-					PlaceholderFragment.location_view.setText(lastLocation);
+				if((latitudeField != null) && (longitudeField != null) && (lastLocation != null)) {
+					latitudeField.setText(String.valueOf(location.getLatitude()));
+					longitudeField.setText(String.valueOf(location.getLongitude()));
+					//PlaceholderFragment.location_view.setText(lastLocation);
 					Log.i("UI", "updated UI");
 				}
 			}
@@ -316,30 +318,40 @@ LocationListener {
 	public void onLocationChanged(Location location) {
 		int lat = (int) (location.getLatitude());
 		int lng = (int) (location.getLongitude());
-		latitudeField.setText(String.valueOf(lat));
-		longitudeField.setText(String.valueOf(lng));
-				
-		String display = "("+location.getLatitude()+","+location.getLongitude()+")";
-		this.lastLocation = display;
-		updateUI();
-		Log.i("location", "in on location changed");
-		if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
-			Point current = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
+		if (latitudeField != null && longitudeField != null)
+		{
+			String display = "(" + lat + "," + lng + ")";
+			this.lastLocation = display;
+			updateUI(location);
+			Log.i("location", "in on location changed");
+			Point current = new Point(location.getTime(), lat, lng);
 			stroke_manager.addPoint(stroke_name, current);
 			Log.i("adding", "points added");
 		}
+		else
+		{
+			Log.i("debug", "its null");
+			latitudeField = (TextView) this.findViewById(R.id.lat_display);
+			longitudeField = (TextView) this.findViewById(R.id.lng_display);
+			
+			
+		}
+				
+		//String display = "("+location.getLatitude()+","+location.getLongitude()+")";
+
+
 	}
 	//@Override
 	protected void onResume()
 	{
 		super.onResume();
-		locationManager.requestLocationUpdates(provider, 400, 1, (android.location.LocationListener) this);
+		locationManager.requestLocationUpdates(provider, 400, 1, this);
 	}
 	//@Override
 	protected void onPause()
 	{
 		super.onPause();
-		locationManager.removeUpdates((android.location.LocationListener) this);
+		locationManager.removeUpdates(this);
 	}
 	//@Override
 	public void onStatusChanged(String provider, int status, Bundle extras)

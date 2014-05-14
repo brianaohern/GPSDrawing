@@ -303,7 +303,7 @@ int id action_context_bar 0x7f060020
 int id action_menu_divider 0x7f060019
 int id action_menu_presenter 0x7f06001a
 int id action_mode_close_button 0x7f060027
-int id action_settings 0x7f06004d
+int id action_settings 0x7f06004f
 int id activity_chooser_view_content 0x7f060028
 int id always 0x7f06000f
 int id beginning 0x7f060014
@@ -328,10 +328,12 @@ int id hybrid 0x7f060004
 int id icon 0x7f06002d
 int id ifRoom 0x7f06000e
 int id image 0x7f06002a
+int id lat_display 0x7f06004c
 int id listMode 0x7f060005
 int id list_item 0x7f06002c
+int id lng_display 0x7f06004e
 int id location_display 0x7f06004b
-int id location_header 0x7f06004c
+int id location_header 0x7f06004d
 int id middle 0x7f060015
 int id never 0x7f06000d
 int id none 0x7f060000

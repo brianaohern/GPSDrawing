@@ -1,5 +1,6 @@
 package edu.ics.uci.gpsdrawing;
-
+//i started adding things based on this tutorial
+// http://www.vogella.com/tutorials/AndroidLocationAPI/article.html
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -18,7 +19,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.location.Criteria; //added this
 import android.location.Location;
+//import android.location.LocationListener; //thought i needed this, it's up there though
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -51,10 +54,31 @@ LocationListener {
 	public static LocationRequest mLocationRequest;
 	public static Activity parent;
 	
+	private TextView latitudeField;
+	private TextView longitudeField;
+	private LocationManager locationManager;
+	private String provider;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gpsdrawing);
+		
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		Criteria criteria = new Criteria();
+		provider = locationManager.getBestProvider(criteria, false);
+		Location location = locationManager.getLastKnownLocation(provider);
+		
+		if (location !=null)
+		{
+			System.out.println("Provider " + provider + " has been selected.");
+			onLocationChanged(location);
+		}
+		else
+		{
+			latitudeField.setText("Location not available");
+			longitudeField.setText("Location not available");
+		}
 		
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
@@ -290,6 +314,11 @@ LocationListener {
 
 	@Override
 	public void onLocationChanged(Location location) {
+		int lat = (int) (location.getLatitude());
+		int lng = (int) (location.getLongitude());
+		latitudeField.setText(String.valueOf(lat));
+		longitudeField.setText(String.valueOf(lng));
+				
 		String display = "("+location.getLatitude()+","+location.getLongitude()+")";
 		this.lastLocation = display;
 		updateUI();
@@ -300,6 +329,31 @@ LocationListener {
 			Log.i("adding", "points added");
 		}
 	}
-	
-	
+	//@Override
+	protected void onResume()
+	{
+		super.onResume();
+		locationManager.requestLocationUpdates(provider, 400, 1, (android.location.LocationListener) this);
+	}
+	//@Override
+	protected void onPause()
+	{
+		super.onPause();
+		locationManager.removeUpdates((android.location.LocationListener) this);
+	}
+	//@Override
+	public void onStatusChanged(String provider, int status, Bundle extras)
+	{
+	}
+	//@Override
+	public void onProviderEnabled(String provider)
+	{
+		Toast.makeText(this, "Enabled new provider" + provider, Toast.LENGTH_SHORT).show();
+	}
+	//@Override
+	public void onProviderDisabled(String provider)
+	{
+		Toast.makeText(this, "Disabled provider" + provider, Toast.LENGTH_SHORT).show();
+
+	}
 }

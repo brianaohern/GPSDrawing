@@ -9,22 +9,23 @@ import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
-import edu.uci.ics.ics163.gpsdrawupload.Point;
+//import edu.uci.ics.ics163.gpsdrawupload.Point;
 import edu.uci.ics.ics163.gpsdrawupload.StrokeManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.PendingIntent;
-import android.content.Context;
+//import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.location.Criteria; //added this
+//import android.location.Criteria; //added this
 import android.location.Location;
 //import android.location.LocationListener; //thought i needed this, it's up there though
-import android.location.LocationManager;
+//import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,7 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-public class DrawGPS extends Activity implements GooglePlayServicesClient.ConnectionCallbacks, 
+public class DrawGPS extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks, 
 GooglePlayServicesClient.OnConnectionFailedListener, 
 LocationListener, android.location.LocationListener {
 
@@ -56,35 +57,39 @@ LocationListener, android.location.LocationListener {
 	//new variables
 	private static TextView latitudeField;
 	private static TextView longitudeField;
-	private LocationManager locationManager;
-	private String provider;
+	//private LocationManager locationManager;
+	//private String provider;
 	public static TextView stroke_view, point_view;
+	//more variables
+	//private static Location mCurrentLocation = mLocationClient.getLastLocation();
+	private static final int MILLISECONDS_PER_SECOND = 1000;
+	public static final int UPDATE_INTERVAL_IN_SECONDS = 5;
+	private static final long UPDATE_INTERVAL = MILLISECONDS_PER_SECOND * UPDATE_INTERVAL_IN_SECONDS;
+	private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
+	private static final long FASTEST_INTERVAL = MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
+	//private boolean mUpdatesRequested;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gpsdrawing);
+		mLocationRequest = LocationRequest.create();
+		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+		mLocationRequest.setInterval(UPDATE_INTERVAL);
+		mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
 		latitudeField = (TextView) this.findViewById(R.id.lat_display);
 		longitudeField = (TextView) this.findViewById(R.id.lng_display);
 		stroke_view = (TextView) this.findViewById(R.id.strokes_display);
 		point_view = (TextView) this.findViewById(R.id.points_display);
 		
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		Criteria criteria = new Criteria();
-		provider = locationManager.getBestProvider(criteria, false);
-		Location location = locationManager.getLastKnownLocation(provider);
-		
-		if (location !=null)
-		{
-			System.out.println("Provider " + provider + " has been selected.");
-			onLocationChanged(location);
-		}
-		else
-		{
-			//latitudeField.setText("Location not available");
-			//longitudeField.setText("Location not available");
-		}
+		//locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		//Criteria criteria = new Criteria();
+		//provider = locationManager.getBestProvider(criteria, false);
+		//Location location = locationManager.getLastKnownLocation(provider);
+		mLocationClient = new LocationClient(this, this, this);
+		//mUpdatesRequested = false;
 		
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
@@ -92,11 +97,11 @@ LocationListener, android.location.LocationListener {
 			pen_status = false;
 			stroke_name = String.valueOf((int)(Math.random()));
 			stroke_manager = new StrokeManager();
-			mLocationClient = new LocationClient(this, this, this);
-			mLocationRequest = LocationRequest.create();
-			mLocationRequest.setFastestInterval(2000);
-			mLocationRequest.setInterval(5000);
-			mLocationRequest.setPriority(102);
+			//mLocationClient = new LocationClient(this, this, this);
+			//mLocationRequest = LocationRequest.create();
+			//mLocationRequest.setFastestInterval(2000);
+			//mLocationRequest.setInterval(5000);
+			//mLocationRequest.setPriority(102);
 			mLocationClient.connect();
 			
 		}
@@ -210,11 +215,11 @@ LocationListener, android.location.LocationListener {
 						stroke_name = String.valueOf((int)(Math.random()));
 						pen_status = true;
 						Log.i("pen status", "Pen down");
-						//if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
-						//	PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent("android.intent.action.LOCALE_CHANGED"), PendingIntent.FLAG_UPDATE_CURRENT);
-						//	mLocationClient.requestLocationUpdates(mLocationRequest, pendingIntent);
-						//	Log.i("requesting", "updating");
-						//}
+						if ((mLocationClient != null) && (mLocationClientConnected) && (mLocationRequest != null)) {
+							PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent("android.intent.action.LOCALE_CHANGED"), PendingIntent.FLAG_UPDATE_CURRENT);
+							mLocationClient.requestLocationUpdates(mLocationRequest, pendingIntent);
+							Log.i("requesting", "updating");
+						}
 					} else {
 						pen_status = false;
 					}
@@ -229,6 +234,7 @@ LocationListener, android.location.LocationListener {
 			@Override
 			public void run() {
 				Log.i("UI", "in update");
+				servicesConnected();
 				if((latitudeField != null) && (longitudeField != null) && (lastLocation != null)) {
 					latitudeField.setText(String.valueOf(location.getLatitude()));
 					longitudeField.setText(String.valueOf(location.getLongitude()));
@@ -259,6 +265,67 @@ LocationListener, android.location.LocationListener {
 			return mDialog;
 		}
 	}
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		//Decide what to do based on the original request code
+		 switch (requestCode) {
+         
+         case CONNECTION_FAILURE_RESOLUTION_REQUEST :
+         /*
+          * If the result code is Activity.RESULT_OK, try
+          * to connect again
+          */
+             switch (resultCode) {
+                 case Activity.RESULT_OK :
+                 /*
+                  * Try the request again
+                  */
+                 
+                 break;
+             }
+         }
+		 
+	}
+	 private boolean servicesConnected() {
+	        // Check that Google Play services is available
+	        int resultCode =
+	                GooglePlayServicesUtil.
+	                        isGooglePlayServicesAvailable(this);
+	        // If Google Play services is available
+	        if (ConnectionResult.SUCCESS == resultCode) {
+	            // In debug mode, log the status
+	            Log.d("Location Updates",
+	                    "Google Play services is available.");
+	            // Continue
+	            return true;
+	        // Google Play services was not available for some reason
+	        } else {
+	            // Get the error code
+	            int errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+	            
+	            if (errorCode != ConnectionResult.SUCCESS) {
+	            	GooglePlayServicesUtil.getErrorDialog(errorCode, this, 0).show();
+	            }
+	            // Get the error dialog from Google Play services
+	            Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+	                    errorCode,
+	                    this,
+	                    CONNECTION_FAILURE_RESOLUTION_REQUEST);
+
+	            // If Google Play services can provide an error dialog
+	            if (errorDialog != null) {
+	                // Create a new DialogFragment for the error dialog
+	                ErrorDialogFragment errorFragment =
+	                        new ErrorDialogFragment();
+	                // Set the dialog in the DialogFragment
+	                errorFragment.setDialog(errorDialog);
+	                // Show the error dialog in the DialogFragment
+	                //errorFragment.show(getSupportFragmentManager(), "Location Updates");
+	            }
+	            return false;
+	        }
+	    }
+	
 	
 	public class mLocationManager extends AsyncTask<Activity, Integer, Integer> {
 		
@@ -267,12 +334,13 @@ LocationListener, android.location.LocationListener {
 			return null;
 		}
 	}
-	//@Override
+	@Override
 	public void onConnected(Bundle connectionHint)
 	{
 		//Display the connection status
 		Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 		mLocationClientConnected = true;
+		mLocationClient.requestLocationUpdates(mLocationRequest, this);
 	}
 	
 	@Override
@@ -313,11 +381,23 @@ LocationListener, android.location.LocationListener {
 	public void onDisconnected() {
 		Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
 	}
-
+	
+	@Override
+	public void onLocationChanged(Location location)
+	{
+		//report to the UI that the location was updated
+		String msg = "Updated Location: " + 
+				Double.toString(location.getLatitude()) + "," + 
+				Double.toString(location.getLongitude());
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+	}
+	
+	
+	/*
 	@Override
 	public void onLocationChanged(Location location) {
-		int lat = (int) (location.getLatitude());
-		int lng = (int) (location.getLongitude());
+		double lat = (double) (location.getLatitude());
+		double lng = (double) (location.getLongitude());
 		if (latitudeField != null && longitudeField != null)
 		{
 			String display = "(" + lat + "," + lng + ")";
@@ -333,25 +413,48 @@ LocationListener, android.location.LocationListener {
 			Log.i("debug", "its null");
 			latitudeField = (TextView) this.findViewById(R.id.lat_display);
 			longitudeField = (TextView) this.findViewById(R.id.lng_display);
-			
-			
 		}
-				
+		*/		
 		//String display = "("+location.getLatitude()+","+location.getLongitude()+")";
 
-
+	@Override
+    protected void onStart() 
+    {
+        super.onStart();
+        // Connect the client.
+        mLocationClient.connect();
+    }
+    @Override
+	protected void onStop()
+	{
+		//Disconnecting the client invalidates it
+		if (mLocationClient.isConnected())
+		{
+			mLocationClient.removeLocationUpdates(this);
+		}
+		mLocationClient.disconnect();
+		super.onStop();
 	}
-	//@Override
+	@Override
 	protected void onResume()
 	{
+	//	if (mPrefs.contains("KEY_UPDATES_ON")) {
+    //        mUpdatesRequested =
+    //                mPrefs.getBoolean("KEY_UPDATES_ON", false);
+
+        // Otherwise, turn off location updates
+    //    } else {
+    //        mEditor.putBoolean("KEY_UPDATES_ON", false);
+    //        mEditor.commit();
+    //    }
 		super.onResume();
-		locationManager.requestLocationUpdates(provider, 400, 1, this);
+		//locationManager.requestLocationUpdates(provider, 400, 1, this);
 	}
-	//@Override
+	@Override
 	protected void onPause()
 	{
 		super.onPause();
-		locationManager.removeUpdates(this);
+		//locationManager.removeUpdates(this);
 	}
 	//@Override
 	public void onStatusChanged(String provider, int status, Bundle extras)
